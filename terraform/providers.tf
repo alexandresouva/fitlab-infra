@@ -2,7 +2,7 @@ terraform {
   required_version = ">= 1.5.0"
 
   backend "s3" {
-    bucket         = "fitlab-terraform-state-340271092785"
+    bucket         = "fitlab-mfe-terraform-state-dev"
     key            = "state/terraform.tfstate"
     region         = "us-east-1"
   }

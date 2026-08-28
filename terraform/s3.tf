@@ -56,7 +56,7 @@ data "aws_iam_policy_document" "s3_mfe_assets_policy" {
 
   statement {
     actions   = ["s3:GetObject"]
-    resources = ["${aws_s3_bucket.mfe_assets[each.key].arn}/*"]
+    resources = ["arn:aws:s3:::${each.value}/*"]
 
     principals {
       type        = "Service"
