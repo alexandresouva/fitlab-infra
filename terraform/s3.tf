@@ -74,7 +74,8 @@ data "aws_iam_policy_document" "s3_mfe_assets_policy" {
 resource "aws_s3_object" "federation_manifest" {
   bucket       = aws_s3_bucket.mfe_assets["shell"].id
   key          = "federation.manifest.json"
-  content_type = "application/json"
+  content_type  = "application/json"
+  cache_control = "no-cache, no-store, must-revalidate"
 
   # Generates the manifest dynamically based on the micro_frontends map
   content = jsonencode({

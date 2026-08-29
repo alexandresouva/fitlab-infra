@@ -40,7 +40,50 @@ resource "aws_cloudfront_distribution" "mfe_cdn" {
     compress                 = true
   }
 
-  # Dynamic Ordered Cache Behaviors for Remote MFEs
+  # Specific No-Cache Behaviors for Entry Points
+  ordered_cache_behavior {
+    path_pattern     = "/index.html"
+    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "S3-Mfe-shell"
+
+    cache_policy_id            = data.aws_cloudfront_cache_policy.caching_disabled.id
+    origin_request_policy_id   = data.aws_cloudfront_origin_request_policy.cors_s3.id
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.no_cache.id
+    viewer_protocol_policy     = "redirect-to-https"
+    compress                   = true
+  }
+
+  ordered_cache_behavior {
+    path_pattern     = "/federation.manifest.json"
+    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "S3-Mfe-shell"
+
+    cache_policy_id            = data.aws_cloudfront_cache_policy.caching_disabled.id
+    origin_request_policy_id   = data.aws_cloudfront_origin_request_policy.cors_s3.id
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.no_cache.id
+    viewer_protocol_policy     = "redirect-to-https"
+    compress                   = true
+  }
+
+  dynamic "ordered_cache_behavior" {
+    for_each = keys(var.micro_frontends)
+    content {
+      path_pattern     = "/${ordered_cache_behavior.value}/remoteEntry.json"
+      allowed_methods  = ["GET", "HEAD", "OPTIONS"]
+      cached_methods   = ["GET", "HEAD"]
+      target_origin_id = "S3-Mfe-${ordered_cache_behavior.value}"
+
+      cache_policy_id            = data.aws_cloudfront_cache_policy.caching_disabled.id
+      origin_request_policy_id   = data.aws_cloudfront_origin_request_policy.cors_s3.id
+      response_headers_policy_id = aws_cloudfront_response_headers_policy.no_cache.id
+      viewer_protocol_policy     = "redirect-to-https"
+      compress                   = true
+    }
+  }
+
+  # Dynamic Ordered Cache Behaviors for Remote MFEs Assets (Cache Optimized)
   dynamic "ordered_cache_behavior" {
     for_each = keys(var.micro_frontends)
     content {
@@ -86,6 +129,23 @@ data "aws_cloudfront_cache_policy" "caching_optimized" {
   name = "Managed-CachingOptimized"
 }
 
+data "aws_cloudfront_cache_policy" "caching_disabled" {
+  name = "Managed-CachingDisabled"
+}
+
 data "aws_cloudfront_origin_request_policy" "cors_s3" {
   name = "Managed-CORS-S3Origin"
+}
+
+resource "aws_cloudfront_response_headers_policy" "no_cache" {
+  name    = "${var.project_name}-${var.environment}-no-cache-policy"
+  comment = "Disable browser caching for entry points (index, manifest, remoteEntry)"
+
+  custom_headers_config {
+    items {
+      header   = "Cache-Control"
+      override = true
+      value    = "no-cache, no-store, must-revalidate"
+    }
+  }
 }
