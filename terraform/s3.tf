@@ -1,7 +1,7 @@
 locals {
   mfe_buckets = merge(
     { "shell" = "${var.project_name}-mfe-shell-${var.environment}" },
-    { for mfe in var.micro_frontends : mfe => "${var.project_name}-mfe-${mfe}-${var.environment}" }
+    { for mfe in keys(var.micro_frontends) : mfe => "${var.project_name}-mfe-${mfe}-${var.environment}" }
   )
 }
 
@@ -76,8 +76,8 @@ resource "aws_s3_object" "federation_manifest" {
   key          = "federation.manifest.json"
   content_type = "application/json"
 
-  # Generates the manifest dynamically based on the micro_frontends list
+  # Generates the manifest dynamically based on the micro_frontends map
   content = jsonencode({
-    for mfe in var.micro_frontends : "mfe-${mfe}" => "/${mfe}/remoteEntry.json"
+    for folder, remote_name in var.micro_frontends : remote_name => "/${folder}/remoteEntry.json"
   })
 }

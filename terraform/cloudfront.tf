@@ -16,7 +16,7 @@ resource "aws_cloudfront_distribution" "mfe_cdn" {
 
   # Dynamic Origins for Remote MFEs
   dynamic "origin" {
-    for_each = var.micro_frontends
+    for_each = keys(var.micro_frontends)
     content {
       domain_name              = aws_s3_bucket.mfe_assets[origin.value].bucket_regional_domain_name
       origin_id                = "S3-Mfe-${origin.value}"
@@ -42,7 +42,7 @@ resource "aws_cloudfront_distribution" "mfe_cdn" {
 
   # Dynamic Ordered Cache Behaviors for Remote MFEs
   dynamic "ordered_cache_behavior" {
-    for_each = var.micro_frontends
+    for_each = keys(var.micro_frontends)
     content {
       path_pattern     = "/${ordered_cache_behavior.value}/*"
       allowed_methods  = ["GET", "HEAD", "OPTIONS"]

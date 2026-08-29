@@ -17,7 +17,9 @@ variable "environment" {
 }
 
 variable "micro_frontends" {
-  type        = list(string)
-  description = "List of remote Micro Frontends to provision"
-  default     = ["workouts"]
+  type        = map(string)
+  description = "Map of remote MFE folder names to their remote names (Module Federation name)"
+  default = {
+    "workouts" = "mfe-workout-planner"
+  }
 }
