@@ -70,3 +70,14 @@ data "aws_iam_policy_document" "s3_mfe_assets_policy" {
     }
   }
 }
+
+resource "aws_s3_object" "federation_manifest" {
+  bucket       = aws_s3_bucket.mfe_assets["shell"].id
+  key          = "federation.manifest.json"
+  content_type = "application/json"
+
+  # Generates the manifest dynamically based on the micro_frontends list
+  content = jsonencode({
+    for mfe in var.micro_frontends : "mfe-${mfe}" => "/${mfe}/remoteEntry.json"
+  })
+}
